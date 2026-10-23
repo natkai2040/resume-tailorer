@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Resume Workbench</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#e9edf2; --pn:#fff; --ink:#1c2530; --mut:#66727f; --ln:#d3dae2; --ac:#2f4bd1; --acs:#e5e9fb; --warn:#b42318; --ai:#fff1b8;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#12171d; --pn:#1b222b; --ink:#e6ebf0; --mut:#9aa6b2; --ln:#2e3844; --ac:#9aabff; --acs:#252d52; --warn:#ff8a7a; --ai:#4a3f10; } }
+:root[data-theme="dark"] { --bg:#12171d; --pn:#1b222b; --ink:#e6ebf0; --mut:#9aa6b2; --ln:#2e3844; --ac:#9aabff; --acs:#252d52; --warn:#ff8a7a; --ai:#4a3f10; }
+* { box-sizing:border-box; }
+html, body { height:100%; margin:0; }
+body { background:var(--bg); color:var(--ink); font:14px/1.45 "IBM Plex Sans", system-ui, sans-serif; }
+#app { display:flex; flex-direction:column; height:100%; }
+.top { display:flex; gap:12px; align-items:center; padding:8px 14px; background:var(--pn); border-bottom:1px solid var(--ln); }
+.priv { font-size:12px; color:var(--mut); }
+.main { flex:1; display:grid; grid-template-columns:minmax(360px,44%) 1fr; min-height:0; }
+.main.wide { grid-template-columns:minmax(520px,62%) 1fr; }
+.ed { overflow:auto; padding:12px 14px; border-right:1px solid var(--ln); }
+.pvw { overflow:auto; padding:12px; }
+button, select, input, textarea { font:inherit; color:inherit; }
+button { background:var(--pn); border:1px solid var(--ln); border-radius:6px; padding:4px 10px; cursor:pointer; }
+button:hover { border-color:var(--ac); }
+button.pri { background:var(--ac); color:#fff; border-color:var(--ac); }
+.tabs { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:12px; }
+.tabs button.on { background:var(--acs); border-color:var(--ac); color:var(--ac); font-weight:600; }
+input, textarea, select { background:var(--pn); border:1px solid var(--ln); border-radius:6px; padding:5px 8px; width:100%; }
+:focus-visible { outline:2px solid var(--ac); outline-offset:1px; }
+textarea { resize:vertical; }
+label { display:block; font-size:12px; color:var(--mut); margin-bottom:6px; }
+.sec, .card { background:var(--pn); border:1px solid var(--ln); border-radius:8px; padding:10px; margin-bottom:12px; }
+.sh { display:flex; gap:6px; align-items:center; }
+.st { font-weight:600; font-size:15px; }
+.tools { display:flex; gap:4px; white-space:nowrap; align-items:center; }
+.hint { color:var(--mut); font-size:12px; margin:4px 0 8px; }
+.row { display:flex; gap:6px; margin-bottom:6px; }
+.item { border-top:1px solid var(--ln); padding:8px 0 8px 8px; margin-top:6px; }
+.bul { margin:8px 0 6px 6px; padding-left:8px; border-left:2px solid var(--ln); }
+.ver { display:flex; gap:6px; align-items:flex-start; margin:4px 0; }
+.vside { display:flex; flex-direction:column; gap:3px; align-items:flex-end; }
+.skills { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0; }
+.sk { display:flex; flex-direction:column; gap:3px; min-width:200px; border:1px solid var(--ln); border-radius:6px; padding:4px 6px; border-left-width:4px; }
+.sk input { width:100%; padding:1px 4px; }
+.mini { padding:1px 6px; font-size:12px; }
+.chip { display:inline-block; color:#1c2530; border-radius:10px; padding:0 8px; font-size:12px; margin:2px 4px 2px 0; cursor:pointer; }
+.badge { display:inline-block; font-size:11px; color:var(--mut); border:1px dashed var(--mut); border-radius:4px; padding:0 5px; cursor:pointer; white-space:nowrap; }
+.badge.ai { background:var(--ai); color:var(--ink); border-color:transparent; }
+.tagin { width:150px; padding:1px 6px; font-size:12px; }
+.note { background:var(--ai); border-radius:8px; padding:8px 10px; margin-bottom:10px; font-size:13px; }
+.warn { color:var(--warn); }
+.split { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.split > div { min-height:200px; }
+.d { border:1px solid var(--ln); border-left-width:4px; border-radius:6px; padding:4px 6px; margin:5px 0; background:var(--pn); }
+.d summary { cursor:grab; display:flex; justify-content:space-between; gap:6px; }
+.dv { font-size:12px; padding:3px 5px; margin:3px 0; border:1px solid var(--ln); border-left-width:4px; border-radius:4px; cursor:grab; }
+.dv.used, .chip.used { background:var(--acs); outline:1px solid var(--ac); }
+.drop { border:2px dashed var(--ln); border-radius:8px; padding:6px; }
+.tb { font-size:12px; display:flex; justify-content:space-between; gap:6px; padding:2px 0; }
+#pgbar { position:sticky; top:0; z-index:2; background:var(--bg); padding-bottom:6px; font-size:12px; color:var(--mut); }
+#paper { background:#fff; width:816px; box-shadow:0 1px 8px rgba(0,0,0,.25); margin:0 auto; }
+#pc { position:relative; padding:57.6px; }
+.brk { position:absolute; left:0; right:0; border-top:1px dashed #999; font:10px sans-serif; color:#999; text-align:right; padding-right:6px; }
+@media (max-width:900px) { .main, .main.wide { grid-template-columns:1fr; overflow:auto; } .split { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top"><b>Resume Workbench</b><span class="priv">Saved only in this browser. This page makes no AI or network calls: you copy and paste to any AI yourself.</span></div>
+  <div class="main">
+    <div class="ed" id="ed"></div>
+    <div class="pvw" id="pv">
+      <div id="pgbar"></div>
+      <div id="paper"><div id="pc" class="paper"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= Resume look (used by the preview and the exported file) ================= */
+const PAPER_CSS = `
+.paper { font:11pt/1.28 "Times New Roman",Times,serif; color:#000; }
+.paper h1 { font-size:20pt; margin:0; text-align:center; }
+.paper .ct, .paper .sm { text-align:center; font-size:10pt; margin:0; }
+.paper h2 { font-size:11pt; text-transform:uppercase; border-bottom:1px solid #000; margin:10px 0 4px; padding-bottom:1px; }
+.paper .ih { display:flex; justify-content:space-between; margin-top:4px; break-inside:avoid; }
+.paper .ii { font-style:italic; }
+.paper ul { margin:2px 0 0; padding-left:20px; }
+.paper li { break-inside:avoid; }
+.paper .sk { margin-top:2px; display:block; border:0; padding:0; }`;
+document.head.insertAdjacentHTML("beforeend", `<style>${PAPER_CSS}</style>`);
+
+// Letter paper, 0.6in margins (must match @page in the exported file)
+const MARGIN = 57.6, PAGE_H = 1056 - 2 * MARGIN;
+
+/* ================= State ================= */
+const KEY = "resume-workbench-v2";
+const $ = s => document.querySelector(s);
+const uid = () => Math.random().toString(36).slice(2, 8);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+
+let S = upgrade(loadState());                       // all saved data
+S.id = "resume";                         // lets whole-resume tags work like any other tag target
+let tab = "master";
+let ai = { mode:"edit", scope:"resume", raw:"", co:"", jd:"", note:"", item:"", lines:3, out:"", inp:"", msg:"", bin:"", bmsg:"" };
+let saver = null;                          // set when running inside Claude
+let X = {}, PAR = {}, SEC = {};            // id -> object, id -> owning entry, entry id -> section
+const openIds = new Set();                 // drawer entries the user has opened
+
+const newSection = (title, type) => ({ id:uid(), title, type, dates:true, items:[] });
+const newHeader = () => ({ id:uid(), title:"Header", type:"header", h:{ name:"", email:"", phone:"", links:"", summary:"" } });
+const newBullet = () => { const v = { id:uid(), text:"" }; return { id:uid(), tags:[], vers:[v] }; };
+const newEntry = type => type == "skills"
+  ? { id:uid(), heading:"", tags:[], skills:[] }
+  : { id:uid(), heading:"", sub:"", loc:"", date:"", tags:[], bullets:[newBullet()] };
+
+function seed() {
+  return { cur:null, tailors:[], sections:[newHeader(), newSection("Education","items"), newSection("Projects","items"), newSection("Experience","items"), newSection("Skills","skills")] };
+}
+function loadState() {
+  try {
+    const saved = localStorage.getItem(KEY);
+    if (saved) return JSON.parse(saved);
+    const old = localStorage.getItem("resume-workbench-v1");     // migrate the first version's master data
+    if (old) {
+      const o = JSON.parse(old);
+      o.tailors = []; o.cur = null;
+      o.sections.forEach(s => (s.items || []).forEach(i => {
+        if (s.type == "skills") i.skills = (i.line || "").split(",").map(t => t.trim()).filter(Boolean).map(text => ({ id:uid(), text, tags:[] }));
+        (i.bullets || []).forEach(b => b.vers.forEach(v => { v.alt = v.kind && v.kind != "full"; delete v.kind; }));
+      }));
+      return o;
+    }
+  } catch (err) { /* fall through to a fresh resume */ }
+  return seed();
+}
+// Bring older saved data up to the current shape: skills now have versions, just like bullets
+function upgrade(state) {
+  const skillById = {};
+  state.sections.forEach(s => (s.items || []).forEach(i => (i.skills || []).forEach(sk => {
+    if (!sk.vers) { sk.vers = [{ id:uid(), text:sk.text || "", ...(sk.ai ? { ai:true } : {}) }]; delete sk.text; delete sk.ai; }
+    skillById[sk.id] = sk;
+  })));
+  state.tailors.forEach(t => t.items.forEach(ti => {
+    ti.skills = ti.skills.map(r => typeof r == "string" ? { id:r, v:skillById[r] ? skillById[r].vers[0].id : "" } : r);
+  }));
+  return state;
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (err) { ai.bmsg = "Could not save to browser storage. Use Backup."; }
+}
+
+/* ================= Lookups and list helpers ================= */
+function reindex() {
+  X = {}; PAR = {}; SEC = {}; X[S.id] = S;
+  S.sections.forEach(s => {
+    X[s.id] = s;
+    (s.items || []).forEach(item => {
+      X[item.id] = item; SEC[item.id] = s;
+      (item.bullets || []).forEach(b => { X[b.id] = b; PAR[b.id] = item; b.vers.forEach(v => X[v.id] = v); });
+      (item.skills || []).forEach(sk => { X[sk.id] = sk; PAR[sk.id] = item; sk.vers.forEach(v => X[v.id] = v); });
+    });
+  });
+  S.tailors.forEach(t => X[t.id] = t);
+}
+function masterLists() {
+  const lists = [S.sections];
+  S.sections.forEach(s => (s.items || []).forEach(i => {
+    lists.push(s.items);
+    if (i.bullets) { lists.push(i.bullets); i.bullets.forEach(b => lists.push(b.vers)); }
+    if (i.skills) { lists.push(i.skills); i.skills.forEach(k => lists.push(k.vers)); }
+  }));
+  return [...new Set(lists)];     // an entry list was added once per entry; each list must be moved only once
+}
+function moveIn(list, id, dir) {
+  const k = list.findIndex(o => o.id == id);
+  if (k >= 0 && list[k + dir]) [list[k], list[k + dir]] = [list[k + dir], list[k]];
+}
+function removeFromMaster(id) {
+  masterLists().forEach(list => { const k = list.findIndex(o => o.id == id); if (k >= 0) list.splice(k, 1); });
+  S.tailors.forEach(t => {        // keep tailored resumes consistent
+    t.items = t.items.filter(ti => ti.id != id);
+    t.items.forEach(ti => { ti.bullets = ti.bullets.filter(r => r.id != id); ti.skills = ti.skills.filter(r => r.id != id); });
+  });
+}
+const currentTailor = () => S.tailors.find(t => t.id == S.cur) || null;
+
+/* ================= Tags ================= */
+function tagColor(tag) { let h = 0; for (const c of tag) h = (h * 31 + c.charCodeAt(0)) % 360; return `hsl(${h} 65% 62%)`; }
+const borderOf = o => o && o.tags && o.tags[0] ? `style="border-left-color:${tagColor(o.tags[0])}"` : "";
+const chips = o => (o.tags || []).map(t => `<span class="chip" style="background:${tagColor(t)}" data-a="untag" data-id="${o.id}" data-t="${esc(t)}" title="Click to remove">${esc(t)} ×</span>`).join("");
+const tagInput = o => `${chips(o)}<input class="tagin" list="taglist" data-tagin="${o.id}" placeholder="+ tag, press Enter">`;
+function allTags() {
+  const set = new Set();
+  Object.values(X).forEach(o => (o.tags || []).forEach(t => set.add(t)));
+  return [...set].sort();
+}
+const aiBadge = o => o.ai ? `<span class="badge ai" data-a="unbadge" data-id="${o.id}" data-k="ai" title="Remove label">AI-assisted ×</span>` : "";
+const badges = v => `${v.alt ? `<span class="badge" data-a="unbadge" data-id="${v.id}" data-k="alt" title="Remove label">alternate ×</span>` : ""}${v.ai ? `<span class="badge ai" data-a="unbadge" data-id="${v.id}" data-k="ai" title="Remove label">AI-assisted ×</span>` : ""}`;
+
+/* ================= Master tab ================= */
+const HINT = {
+  Header:"Your name, one reliable way to reach you, and an optional one-line summary.",
+  Education:"School, degree and date. Add GPA, honors or coursework only if it helps the roles you want.",
+  Projects:"What it does, the tech you used, and what you personally built.",
+  Experience:"Start each bullet with a verb, say what you did, and end with a result or number. Facts only.",
+  Skills:"Group by type (Languages, Tools). List only what you could discuss in an interview.",
+  Awards:"Award, issuer and year."
+};
+const HEADER_LABELS = { name:"Full name", email:"Email", phone:"Phone", links:"Links (comma separated)", summary:"Personal description (optional)" };
+const moveButtons = id => `<button class="mini" data-a="mv" data-id="${id}" data-d="-1">↑</button><button class="mini" data-a="mv" data-id="${id}" data-d="1">↓</button>`;
+
+function editBullet(b) {
+  const versions = b.vers.map(v => `
+    <div class="ver">
+      <textarea rows="2" data-f="text" data-id="${v.id}" placeholder="Verb + what you did + result">${esc(v.text)}</textarea>
+      <div class="vside">${badges(v)}${b.vers.length > 1 ? `<button class="mini" data-a="del" data-id="${v.id}" title="Delete this version">✕</button>` : ""}</div>
+    </div>`).join("");
+  return `<div class="bul" ${borderOf(b)}>${versions}
+    <button class="mini" data-a="addAlt" data-id="${b.id}">+ Alternate version</button>
+    <button class="mini" data-a="del" data-id="${b.id}">Remove bullet</button>
+    <div>${tagInput(b)}</div></div>`;
+}
+function editEntry(s, item) {
+  let html = `<div class="item" style="border-left:4px solid ${item.tags[0] ? tagColor(item.tags[0]) : "transparent"}"><div class="sh">`;
+  html += s.type == "skills"
+    ? `<input data-f="heading" data-id="${item.id}" value="${esc(item.heading)}" placeholder="Skill type, e.g. Languages">`
+    : `<input data-f="heading" data-id="${item.id}" value="${esc(item.heading)}" placeholder="Organization, project or school"><input data-f="sub" data-id="${item.id}" value="${esc(item.sub)}" placeholder="Role or degree">`;
+  html += `${aiBadge(item)}<span class="tools">${moveButtons(item.id)}<button class="mini" data-a="del" data-id="${item.id}">✕</button></span></div>`;
+  if (s.type == "skills") {
+    html += `<div class="skills">${item.skills.map(sk => `
+      <div class="sk" ${borderOf(sk)}>${sk.vers.map(v => `<div class="row" style="margin:0 0 3px"><input data-f="text" data-id="${v.id}" value="${esc(v.text)}" placeholder="Skill or course name">${badges(v)}${sk.vers.length > 1 ? `<button class="mini" data-a="del" data-id="${v.id}">✕</button>` : ""}</div>`).join("")}
+      <div><button class="mini" data-a="addAlt" data-id="${sk.id}">+ Alternate</button></div><div>${tagInput(sk)}</div>
+      <button class="mini" data-a="del" data-id="${sk.id}">Remove</button></div>`).join("")}
+      <button class="mini" data-a="addSkill" data-id="${item.id}">+ Skill</button></div>
+      <div>${tagInput(item)}</div>`;
+    return html + "</div>";
+  }
+  html += `<div class="row" style="margin-top:6px"><input data-f="loc" data-id="${item.id}" value="${esc(item.loc)}" placeholder="Location or GPA">`;
+  if (s.dates) html += `<input data-f="date" data-id="${item.id}" value="${esc(item.date)}" placeholder="Jun 2024 – Aug 2025, or one date">`;
+  html += `</div><div>${tagInput(item)}</div>${item.bullets.map(editBullet).join("")}<button class="mini" data-a="addBullet" data-id="${item.id}">+ Add bullet</button></div>`;
+  return html;
+}
+function editSection(s) {
+  let html = `<div class="sec"><div class="sh"><input class="st" data-f="title" data-id="${s.id}" value="${esc(s.title)}">
+    <span class="tools">${s.type != "header" ? `<label style="margin:0"><input type="checkbox" style="width:auto" data-a="dates" data-id="${s.id}" ${s.dates ? "checked" : ""}> dates</label>` : ""}${moveButtons(s.id)}<button class="mini" data-a="del2" data-id="${s.id}">Delete</button></span></div>
+    <p class="hint">${HINT[s.title] || "Add entries that support the roles you target. Rename this section freely."}</p><div>${tagInput(s)}</div>`;
+  if (s.type == "header") {
+    html += Object.keys(HEADER_LABELS).map(k => `<label>${HEADER_LABELS[k]}<input data-f="h.${k}" data-id="${s.id}" value="${esc(s.h[k])}"></label>`).join("");
+  } else {
+    html += s.items.map(item => editEntry(s, item)).join("") + `<button data-a="addEntry" data-id="${s.id}">+ Add ${s.type == "skills" ? "skill group" : "entry"}</button>`;
+  }
+  return html + "</div>";
+}
+function masterTab() {
+  const hasHeader = S.sections.some(s => s.type == "header");
+  return `<datalist id="taglist">${allTags().map(t => `<option>${esc(t)}`).join("")}</datalist>
+    <div class="note">The master resume holds everything: every entry, every alternate version, every skill. Build tailored resumes from it in the Tailored tab.</div>
+    <div class="sec"><b>Whole-resume tags</b><div>${tagInput(S)}</div></div>
+    ${S.sections.map(editSection).join("")}
+    ${hasHeader ? "" : `<button data-a="addHeader">+ Header</button> `}
+    <button data-a="addSection" data-t="items">+ Section</button>
+    <button data-a="addSection" data-t="skills">+ Skills-style section</button>
+    <button class="pri" data-a="export" data-id="">Export master</button>`;
+}
+
+/* ================= Tailored tab ================= */
+function drawerEntry(item, t) {
+  const ti = t && t.items.find(x => x.id == item.id);
+  const body = item.bullets
+    ? item.bullets.map(b => b.vers.map(v => {
+        const used = ti && ti.bullets.some(r => r.id == b.id && r.v == v.id);
+        const key = `ver:${b.id}:${v.id}`;
+        return `<div class="dv ${used ? "used" : ""}" ${borderOf(b)} draggable="true" data-drag="${key}" data-a="pick" data-p="${key}">${esc(v.text) || "(empty)"} ${v.alt ? `<span class="badge">alt</span>` : ""}</div>`;
+      }).join("")).join("")
+    : `<div>${item.skills.map(sk => sk.vers.map(v => {
+        const used = ti && ti.skills.some(r => r.id == sk.id && r.v == v.id);
+        const key = `ver:${sk.id}:${v.id}`;
+        return `<span class="chip ${used ? "used" : ""}" style="background:var(--acs);border-bottom:3px solid ${sk.tags[0] ? tagColor(sk.tags[0]) : "transparent"}" draggable="true" data-drag="${key}" data-a="pick" data-p="${key}">${esc(v.text) || "(empty)"}${v.alt ? " (alt)" : ""}</span>`;
+      }).join("")).join("")}</div>`;
+  return `<details class="d" data-open="${item.id}" ${openIds.has(item.id) ? "open" : ""} ${borderOf(item)}>
+    <summary draggable="true" data-drag="item:${item.id}"><span>${esc(item.heading) || "(untitled)"}</span><button class="mini" data-a="pick" data-p="item:${item.id}">+ All</button></summary>${body}</details>`;
+}
+function tailoredEntryCard(ti) {
+  const item = X[ti.id];
+  if (!item) return "";
+  const bullets = (item.bullets || []).filter(b => ti.bullets.some(r => r.id == b.id)).map(b => {
+    const r = ti.bullets.find(x => x.id == b.id), key = `ver:${b.id}:${r.v}`;
+    return `<div class="tb"><span>• ${esc(chosenText(b, r))}</span><button class="mini" data-a="pick" data-p="${key}">✕</button></div>`;
+  }).join("");
+  const skills = (item.skills || []).filter(sk => ti.skills.some(r => r.id == sk.id)).map(sk =>
+    `<span class="chip" style="background:var(--acs)" data-a="pick" data-p="ver:${sk.id}:${ti.skills.find(r => r.id == sk.id).v}" title="Click to remove">${esc(chosenText(sk, ti.skills.find(r => r.id == sk.id)))} ×</span>`).join("");
+  return `<div class="card" style="padding:6px 8px;border-left:4px solid ${item.tags[0] ? tagColor(item.tags[0]) : "var(--ln)"}">
+    <div class="sh"><b style="flex:1">${esc(item.heading) || "(untitled)"} <span class="hint">${esc(SEC[item.id].title)}</span></b>
+    <button class="mini" data-a="tmv" data-id="${ti.id}" data-d="-1">↑</button><button class="mini" data-a="tmv" data-id="${ti.id}" data-d="1">↓</button><button class="mini" data-a="tdel" data-id="${ti.id}">✕</button></div>${bullets}${skills}</div>`;
+}
+function tailoredTab() {
+  const t = currentTailor();
+  const drawer = S.sections.filter(s => s.type != "header").map(s =>
+    `<div><b>${esc(s.title)}</b>${s.items.map(i => drawerEntry(i, t)).join("") || `<p class="hint">Nothing yet. Add entries in Master.</p>`}</div>`).join("");
+  return `<div class="row"><select id="tsel"><option value="">Choose a tailored resume…</option>${S.tailors.map(x => `<option value="${x.id}" ${x.id == S.cur ? "selected" : ""}>${esc(x.name)}</option>`).join("")}</select>
+      <input id="tn" placeholder="New name, e.g. Acme – Backend"><button class="pri" data-a="newT">New</button></div>
+    ${t ? `<div class="row"><input data-f="name" data-id="${t.id}" value="${esc(t.name)}">
+      <button data-a="dupT">Copy</button><button class="pri" data-a="export" data-id="${t.id}">Export</button><button data-a="delT">Delete</button></div>
+      ${t.ai ? `<p class="hint"><span class="badge ai">AI-assisted</span> selection made from your own entries; no new text.</p>` : ""}` : ""}
+    <p class="hint">Click or drag from the left drawer into the right side. Open an entry to pick individual bullets, versions and skills. A colored edge is the entry’s first tag.</p>
+    <div class="split"><div><b>Master drawer</b>${drawer}</div><div class="drop" id="drop"><b>This resume</b>${t ? (t.items.map(tailoredEntryCard).join("") || `<p class="hint">Drop entries here.</p>`) : `<p class="hint">Create or choose a tailored resume first.</p>`}</div></div>`;
+}
+const chosenText = (b, r) => (b.vers.find(v => v.id == r.v) || b.vers[0]).text;
+
+/* Add or remove something in the current tailored resume.
+   key looks like "item:ID" or "ver:BULLETID:VERSIONID" (skills work like bullets) */
+function pick(key) {
+  const t = currentTailor();
+  if (!t) { ai.bmsg = "Create a tailored resume first."; return; }
+  const [kind, a, b] = key.split(":");
+  const entry = kind == "item" ? X[a] : PAR[a];
+  if (!entry) return;
+  let ti = t.items.find(x => x.id == entry.id);
+  if (!ti) {
+    ti = { id:entry.id, bullets:[], skills:[] };
+    t.items.push(ti);
+    if (kind == "item") {
+      (entry.bullets || []).forEach(bl => ti.bullets.push({ id:bl.id, v:bl.vers[0].id }));
+      (entry.skills || []).forEach(sk => ti.skills.push({ id:sk.id, v:sk.vers[0].id }));
+      return;
+    }
+  }
+  if (kind == "ver") {
+    const list = entry.skills ? ti.skills : ti.bullets;     // bullets and skills work the same way
+    const k = list.findIndex(r => r.id == a);
+    if (k >= 0 && list[k].v == b) list.splice(k, 1);
+    else if (k >= 0) list[k].v = b;
+    else list.push({ id:a, v:b });
+  }
+}
+
+/* ================= Resume rendering ================= */
+function renderResume(t) {
+  let out = "";
+  S.sections.forEach(s => {
+    if (s.type == "header") {
+      const h = s.h, contact = [h.email, h.phone, ...h.links.split(/[,|]/).map(x => x.trim())].filter(Boolean).map(esc).join(" | ");
+      out += `<div class="u"><h1>${esc(h.name) || "Your Name"}</h1><div class="ct">${contact}</div>${h.summary ? `<p class="sm">${esc(h.summary)}</p>` : ""}</div>`;
+      return;
+    }
+    const entries = t ? t.items.filter(ti => X[ti.id] && SEC[ti.id] === s).map(ti => ({ item:X[ti.id], ti })) : s.items.map(item => ({ item, ti:null }));
+    if (!entries.length) return;
+    out += `<div class="u"><h2>${esc(s.title)}</h2></div>`;
+    entries.forEach(({ item, ti }) => {
+      if (s.type == "skills") {
+        const list = item.skills.filter(sk => !ti || ti.skills.some(r => r.id == sk.id))
+          .flatMap(sk => ti ? [chosenText(sk, ti.skills.find(r => r.id == sk.id))] : sk.vers.map(v => v.text))   // master lists every alternate name
+          .filter(x => x.trim());
+        if (list.length) out += `<div class="u sk"><b>${esc(item.heading)}${item.heading ? ":" : ""}</b> ${list.map(x => esc(x)).join(", ")}</div>`;
+        return;
+      }
+      out += `<div class="u ih"><span><b>${esc(item.heading)}</b>${item.loc ? ", " + esc(item.loc) : ""}</span><span>${s.dates ? esc(item.date) : ""}</span></div>${item.sub ? `<div class="u ii">${esc(item.sub)}</div>` : ""}`;
+      const texts = ti
+        ? item.bullets.filter(b => ti.bullets.some(r => r.id == b.id)).map(b => chosenText(b, ti.bullets.find(r => r.id == b.id)))
+        : item.bullets.flatMap(b => b.vers.map(v => v.text));          // master shows every alternate
+      const lines = texts.filter(x => x.trim());
+      if (lines.length) out += `<ul>${lines.map(x => `<li class="u">${esc(x)}</li>`).join("")}</ul>`;
+    });
+  });
+  return out;
+}
+function updatePreview() {
+  save();
+  const c = $("#pc"), p = $("#paper");
+  c.innerHTML = renderResume(tab == "tailored" ? currentTailor() : null);
+  p.style.zoom = 1;
+  // Predict page breaks: a block that would cross the bottom margin moves to the next page
+  let limit = PAGE_H, pages = 1;
+  c.querySelectorAll(".u").forEach(u => {
+    const y = u.offsetTop - MARGIN, h = u.offsetHeight;
+    if (y + h > limit) {
+      pages++; limit = y + PAGE_H;
+      c.insertAdjacentHTML("beforeend", `<div class="brk" style="top:${y + MARGIN - 2}px">predicted page ${pages} starts</div>`);
+    }
+  });
+  $("#pgbar").textContent = `Prediction: about ${pages} page${pages > 1 ? "s" : ""} (Letter, 0.6in margins). Your print dialog may differ slightly.`;
+  p.style.zoom = Math.min(1, ($("#pv").clientWidth - 24) / 816);
+}
+
+/* ================= AI tab (copy / paste only) ================= */
+// Find the part of the encoded resume with this id
+function findNode(obj, id) {
+  if (!obj || typeof obj != "object") return null;
+  if (obj.id == id) return obj;
+  for (const child of Object.values(obj)) { const hit = findNode(child, id); if (hit) return hit; }
+  return null;
+}
+// "resume", "section", "entry" (job, project or skill group), "bullet" or "skill"
+function kindOf(o) {
+  if (o === S) return "resume";
+  if (o.type) return "section";
+  if (o.vers) return PAR[o.id] && PAR[o.id].skills ? "skill" : "bullet";
+  if (o.skills || o.bullets) return "entry";
+  return "skill";
+}
+// Export the whole resume or any one part of it (scopeId), with personal details scrubbed
+function encodeResume(scopeId = "resume") {
+  const header = S.sections.find(s => s.type == "header");
+  const names = header ? header.h.name.split(/\s+/).filter(w => w.length > 2) : [];
+  const scrub = x => {
+    let t = String(x || "");
+    names.forEach(n => t = t.replace(new RegExp(n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), "[NAME]"));
+    return t.replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, "[EMAIL]").replace(/https?:\/\/\S+|www\.\S+/g, "[LINK]").replace(/\+?\d[\d\s().-]{7,}\d/g, "[PHONE]");
+  };
+  const full = { tags:S.tags || [], sections: S.sections.filter(s => s.type != "header").map(s => ({ id:s.id, title:s.title, tags:s.tags || [], entries: s.items.map(i => ({
+    id:i.id, heading:scrub(i.heading), role:scrub(i.sub), date:i.date, tags:i.tags,
+    ...(i.skills ? { skills: i.skills.map(k => ({ id:k.id, tags:k.tags, versions: k.vers.map(v => ({ id:v.id, alt:!!v.alt, text:scrub(v.text) })) })) }
+                 : { bullets: i.bullets.map(b => ({ id:b.id, tags:b.tags, versions: b.vers.map(v => ({ id:v.id, alt:!!v.alt, text:scrub(v.text) })) })) })
+  })) })) };
+  return JSON.stringify(scopeId == "resume" ? full : findNode(full, scopeId) || full);
+}
+function buildPrompt() {
+  const rules = `The resume below is JSON with personal details removed. Entries, bullets, versions and skills have ids. Never invent employers, dates, tools, numbers or achievements.
+HOW TO WORK WITH ME: First reply in plain language: explain what you would change and why, then ask whether I want adjustments. I may ask questions or ask you to revise. Only when I say "export", reply with the JSON object below (you may put it in a code block).\n\n`;
+  const data = `\nRESUME:\n${encodeResume(["edit", "tags", "add"].includes(ai.mode) ? ai.scope : "resume")}`;
+  const known = allTags().join(", ") || "(none yet)";
+  if (ai.mode == "tags") return `${rules}TASK: Suggest tags for the parts in the export (the resume, sections, entries, bullets and skills that have ids). A tag is a short topic label such as a technology, skill area or industry; give at most 3 each. Reuse these existing tags when they fit: ${known}. Skip anything that needs no tag. ${ai.note ? "Notes from me: " + ai.note : ""}
+EXPORT FORMAT: {"type":"tags","tags":[{"id":"<id>","tags":["<tag>"]}]}\n${data}`;
+  if (ai.mode == "add") {
+    const target = ai.scope == "resume" ? S : X[ai.scope] || S, kind = kindOf(target);
+    const itemEntry = '{"heading":"","role":"","loc":"","date":"","tags":[],"bullets":[{"text":"","alternates":[],"tags":[]}]}';
+    const groupEntry = '{"heading":"<group name>","tags":[],"skills":[{"text":"","alternates":[],"tags":[]}]}';
+    const shapes = {
+      resume: `"sections":[{"title":"","type":"items or skills","entries":[${itemEntry} or ${groupEntry}]}]`,
+      section: `"entries":[${target.type == "skills" ? groupEntry : itemEntry}]`,
+      entry: target.skills ? '"skills":[{"text":"","alternates":[],"tags":[]}]' : '"bullets":[{"text":"","alternates":[],"tags":[]}]'
+    };
+    if (!shapes[kind]) return "Pick the whole resume, a section, an entry or a skill group to add items to.";
+    return `${rules}TASK: Turn the RAW TEXT into new items to add to the part with id "${ai.scope}". Use only what the raw text says. "alternates" holds other names or shorter versions of the same item, only if the raw text gives them. Tag each item; reuse these existing tags when they fit: ${known}, or invent short new ones.\nEXPORT FORMAT: {"type":"add","target":"${ai.scope}",${shapes[kind]}}\nRAW TEXT:\n${ai.raw || "(none)"}\n${data}`;
+  }
+  if (ai.mode == "edit") return `${rules}TASK: Suggest stronger wording for bullets (clearer verbs, concrete results, tighter). Only reword facts already given; write [ADD NUMBER] where a metric would help. ${ai.note ? "Focus: " + ai.note : ""}
+EXPORT FORMAT: {"type":"edit","edits":[{"bulletId":"<id>","text":"<new wording>"}]}\n${data}`;
+  if (ai.mode == "condense") return `${rules}TASK: Condense the bullets of entry ${ai.item || "(none chosen)"} into ONE description of about ${ai.lines} lines (roughly ${ai.lines * 95} characters), aimed at this job: ${ai.jd || "(general)"}. Use only facts from those bullets.
+EXPORT FORMAT: {"type":"condense","entryId":"<id>","text":"<description>"}\n${data}`;
+  return `${rules}TASK: Tailor this resume for ${ai.co || "the company below"} using ONLY existing entries, bullets, versions and skills. Keep what is most relevant and aim for about one page. Prefer an alternate (shorter) version where space is tight. Do not write new text. You may drop individual skills, skill groups, bullets or whole entries.
+EXPORT FORMAT: {"type":"tailor","name":"<Company – Role>","itemIds":["<entry id>"],"bulletIds":["<bullet id>"],"versionChoice":{"<bulletId or skillId>":"<versionId>"},"skillIds":["<skill id>"]}
+itemIds must list every entry (including skill groups) you keep, in the order you want them.
+JOB DESCRIPTION:\n${ai.jd || "(none given)"}\n${data}`;
+}
+const cleanTags = list => [...new Set((Array.isArray(list) ? list : []).map(t => String(t).trim()).filter(Boolean))];
+const mergeTags = (old, extra) => cleanTags([...(old || []), ...cleanTags(extra)]);
+
+// Add AI-written items under a target part. Everything new is labeled AI-assisted.
+function addItems(r) {
+  const target = r.target == "resume" ? S : X[r.target];
+  if (!target) return "Target id not found.";
+  // bullets and skills share one shape: a main text plus optional alternates
+  const versioned = b => ({ id:uid(), tags:cleanTags(b.tags), vers:[{ id:uid(), text:String(b.text || b), ai:true }, ...(b.alternates || []).map(a => ({ id:uid(), text:String(a), alt:true, ai:true }))] });
+  const skills = list => (list || []).map(versioned);
+  const bullets = list => (list || []).map(versioned);
+  const entry = (type, e) => type == "skills"
+    ? { id:uid(), heading:e.heading || "", tags:cleanTags(e.tags), skills:skills(e.skills), ai:true }
+    : { id:uid(), heading:e.heading || "", sub:e.role || "", loc:e.loc || "", date:e.date || "", tags:cleanTags(e.tags), bullets:bullets(e.bullets), ai:true };
+  const kind = kindOf(target);
+  let added = [];
+  if (kind == "resume") {
+    (r.sections || []).forEach(s => {
+      const sec = newSection(s.title || "Imported", s.type == "skills" ? "skills" : "items");
+      sec.items = (s.entries || []).map(e => entry(sec.type, e));
+      S.sections.push(sec); added.push(sec);
+    });
+  } else if (kind == "section") {
+    added = (r.entries || []).map(e => entry(target.type, e)); target.items.push(...added);
+  } else if (kind == "entry" && target.skills) {
+    added = skills(r.skills); target.skills.push(...added);
+  } else if (kind == "entry") {
+    added = bullets(r.bullets); target.bullets.push(...added);
+  } else return "Items can only be added to the whole resume, a section, an entry or a skill group.";
+  return `Imported ${added.length} new item(s), labeled AI-assisted. Review the tags and wording.`;
+}
+function importReply() {
+  let r;
+  try {
+    const text = ai.inp, start = text.search(/\{\s*"type"/), end = text.lastIndexOf("}");
+    r = JSON.parse(text.slice(start, end + 1));
+  } catch (err) { ai.msg = "No valid JSON found. Ask the AI to say “export” output again."; return; }
+  let n = 0, skipped = 0;
+  if (r.type == "edit") {
+    (r.edits || []).forEach(d => {
+      const b = X[d.bulletId];
+      if (b && b.vers && d.text) { b.vers.push({ id:uid(), text:String(d.text), ai:true }); n++; } else skipped++;
+    });
+    ai.msg = `Imported ${n} AI edit(s) as new versions labeled AI-assisted.${skipped ? ` ${skipped} skipped (unknown id).` : ""}`;
+  } else if (r.type == "tags") {
+    (r.tags || []).forEach(d => {
+      const o = d.id == "resume" ? S : X[d.id];
+      if (o && (o === S || o.type || Array.isArray(o.tags))) { o.tags = mergeTags(o.tags, d.tags); n++; } else skipped++;
+    });
+    ai.msg = `Imported tags for ${n} part(s).${skipped ? ` ${skipped} skipped (unknown id).` : ""}`;
+  } else if (r.type == "add") {
+    ai.msg = addItems(r);
+  } else if (r.type == "condense") {
+    const item = X[r.entryId];
+    if (!item || !item.bullets || !r.text) { ai.msg = "Entry id not found."; return; }
+    item.bullets.push({ id:uid(), tags:[], vers:[{ id:uid(), text:String(r.text), ai:true }] });
+    ai.msg = "Imported one condensed description as a new bullet (AI-assisted).";
+  } else if (r.type == "tailor") {
+    const items = (r.itemIds || []).filter(id => SEC[id] && SEC[id].type != "header").map(id => ({ id, bullets:[], skills:[] }));
+    const find = id => items.find(x => PAR[id] && x.id == PAR[id].id);
+    if (r.bulletIds) r.bulletIds.forEach(id => { const ti = find(id); if (ti && X[id].vers) ti.bullets.push({ id, v:(X[(r.versionChoice || {})[id]] ? r.versionChoice[id] : X[id].vers[0].id) }); });
+    else items.forEach(ti => (X[ti.id].bullets || []).forEach(b => ti.bullets.push({ id:b.id, v:b.vers[0].id })));
+    if (r.skillIds) r.skillIds.forEach(id => { const ti = find(id); if (ti && X[id].vers) ti.skills.push({ id, v:(X[(r.versionChoice || {})[id]] ? r.versionChoice[id] : X[id].vers[0].id) }); });
+    else items.forEach(ti => (X[ti.id].skills || []).forEach(k => ti.skills.push({ id:k.id, v:k.vers[0].id })));
+    const t = { id:uid(), name:String(r.name || ai.co || "AI tailored"), items, ai:true };
+    S.tailors.push(t); S.cur = t.id;
+    ai.msg = `Imported tailored resume “${t.name}” with ${items.length} entries. Find it in the Tailored tab.`;
+  } else ai.msg = "Reply needs a type of edit, condense or tailor.";
+}
+// Dropdown of every part of the resume that can be exported or tagged
+function scopeOptions() {
+  const short = text => (text || "(empty)").slice(0, 40);
+  const opt = (id, label) => `<option value="${id}" ${id == ai.scope ? "selected" : ""}>${esc(label)}</option>`;
+  let html = opt("resume", "Whole resume");
+  S.sections.filter(s => s.type != "header").forEach(s => {
+    html += opt(s.id, "Section: " + s.title);
+    s.items.forEach(i => {
+      html += opt(i.id, "· " + (i.skills ? "Skill group: " : "Entry: ") + (i.heading || "(untitled)"));
+      (i.bullets || []).forEach(b => html += opt(b.id, "·· Bullet: " + short(b.vers[0].text)));
+      (i.skills || []).forEach(k => html += opt(k.id, "·· Skill: " + short(k.vers[0].text)));
+    });
+  });
+  return html;
+}
+function aiTab() {
+  const entries = S.sections.filter(s => s.type == "items").flatMap(s => s.items.map(i => ({ id:i.id, name:`${s.title}: ${i.heading || "(untitled)"}` })));
+  const modeButton = (m, label) => `<button data-a="mode" data-m="${m}" class="${ai.mode == m ? "on" : ""}">${label}</button>`;
+  return `<div class="note"><b>Privacy.</b> Name, email, phone, links, locations and your header summary are removed, and obvious emails, phones and links are masked. Employer names, school names and bullet text are still included, so a person could identify you from them. Only paste into an AI you trust, and check every AI edit before keeping it.</div>
+    <div class="tabs">${modeButton("edit", "Edit wording")}${modeButton("tags", "Add tags")}${modeButton("add", "Import new items")}${modeButton("tailor", "Tailor to a job")}${modeButton("condense", "Condense an entry")}</div>
+    ${["edit", "tags", "add"].includes(ai.mode) ? `<label>Which part? (the AI only sees this part)<select data-ai="scope">${scopeOptions()}</select></label>` : ""}
+    ${["edit", "tags"].includes(ai.mode) ? `<label>Notes for the AI (optional)<input data-ai="note" value="${esc(ai.note)}"></label>` : ""}
+    ${ai.mode == "add" ? `<label>Raw text to import, e.g. your course list and their areas<textarea rows="5" data-ai="raw">${esc(ai.raw)}</textarea></label>` : ""}
+    ${ai.mode == "tailor" ? `<label>Company and role<input data-ai="co" value="${esc(ai.co)}"></label>` : ""}
+    ${ai.mode == "condense" ? `<div class="row"><select data-ai="item"><option value="">Choose an entry…</option>${entries.map(x => `<option value="${x.id}" ${x.id == ai.item ? "selected" : ""}>${esc(x.name)}</option>`).join("")}</select><input data-ai="lines" type="number" min="1" max="8" value="${ai.lines}" style="width:70px" title="Lines"></div>` : ""}
+    ${["tailor", "condense"].includes(ai.mode) ? `<label>Job description (paste)<textarea rows="5" data-ai="jd">${esc(ai.jd)}</textarea></label>` : ""}
+    <button class="pri" data-a="gen">1. Generate prompt</button> <button data-a="copy">Copy</button>
+    <textarea id="out" rows="6" readonly style="margin:8px 0">${esc(ai.out)}</textarea>
+    <p class="hint">Paste it into your AI, talk through the changes, then say “export”.</p>
+    <label>2. Paste the AI’s reply (the whole message is fine)<textarea rows="5" data-ai="inp">${esc(ai.inp)}</textarea></label>
+    <button class="pri" data-a="imp">Import reply</button> <span class="${ai.msg.startsWith("Imported") ? "" : "warn"}">${esc(ai.msg)}</span>`;
+}
+
+/* ================= Backup tab ================= */
+function backupTab() {
+  return `<div class="note"><b>Warning.</b> This backup contains everything you typed, including your name, contact details and employers. Store it privately.</div>
+    <button class="pri" data-a="saveBackup">Save as .json file</button> <button data-a="copyBackup">Copy to clipboard</button>
+    <p class="hint">To move to another browser, import the file’s text below. Importing replaces what is in this browser.</p>
+    <textarea rows="8" data-ai="bin" placeholder="Paste backup JSON here">${esc(ai.bin)}</textarea>
+    <button class="pri" data-a="importBackup" style="margin-top:6px">Import</button> <span class="warn">${esc(ai.bmsg)}</span>`;
+}
+const backupText = () => JSON.stringify({ app:"resume-workbench", version:2, data:S }, null, 1);
+
+/* ================= File saving ================= */
+async function saveFile(name, text, mime) {
+  try {
+    if (saver) await saver.save({ filename:name, data:text });
+    else {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([text], { type:mime }));
+      a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    }
+  } catch (err) { if (err.code != "declined") alert("Could not save the file: " + (err.message || err.code)); }
+}
+function exportResume(id) {
+  const t = S.tailors.find(x => x.id == id) || null;
+  const name = (t ? t.name : "master").replace(/[^\w-]+/g, "_");
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(name)}</title><style>@page{margin:0.6in}body{margin:0}${PAPER_CSS}</style></head><body><div class="paper">${renderResume(t)}</div></body></html>`;
+  saveFile(name + ".html", html, "text/html");
+}
+
+/* ================= Rendering and events ================= */
+function render() {
+  reindex();
+  $(".main").classList.toggle("wide", tab == "tailored");
+  const body = { master:masterTab, tailored:tailoredTab, ai:aiTab, backup:backupTab }[tab]();
+  const names = [["master", "Master"], ["tailored", "Tailored"], ["ai", "AI"], ["backup", "Backup"]];
+  $("#ed").innerHTML = `<div class="tabs">${names.map(([k, l]) => `<button data-a="tab" data-t="${k}" class="${tab == k ? "on" : ""}">${l}</button>`).join("")}</div>${body}`;
+  updatePreview();
+}
+
+document.addEventListener("input", ev => {
+  const el = ev.target, d = el.dataset;
+  if (d.f) {
+    const o = X[d.id];
+    if (d.f.startsWith("h.")) o.h[d.f.slice(2)] = el.value; else o[d.f] = el.value;
+    updatePreview();
+  }
+  if (d.ai) ai[d.ai] = el.value;
+});
+document.addEventListener("change", ev => {
+  if (ev.target.id == "tsel") { S.cur = ev.target.value || null; render(); }
+  if (ev.target.dataset.ai == "item") ai.item = ev.target.value;
+});
+document.addEventListener("keydown", ev => {
+  const el = ev.target;
+  if (el.dataset.tagin && ev.key == "Enter" && el.value.trim()) {
+    const o = X[el.dataset.tagin], tag = el.value.trim();
+    o.tags = o.tags || [];
+    if (!o.tags.includes(tag)) o.tags.push(tag);
+    render();
+  }
+});
+document.addEventListener("toggle", ev => {                 // remember which drawer entries are open
+  const id = ev.target.dataset && ev.target.dataset.open;
+  if (id) ev.target.open ? openIds.add(id) : openIds.delete(id);
+}, true);
+document.addEventListener("dragstart", ev => {
+  const el = ev.target.closest && ev.target.closest("[data-drag]");
+  if (el) ev.dataTransfer.setData("text/plain", el.dataset.drag);
+});
+document.addEventListener("dragover", ev => { if (ev.target.closest && ev.target.closest("#drop")) ev.preventDefault(); });
+document.addEventListener("drop", ev => {
+  if (!ev.target.closest || !ev.target.closest("#drop")) return;
+  ev.preventDefault(); pick(ev.dataTransfer.getData("text/plain")); render();
+});
+
+document.addEventListener("click", async ev => {
+  const btn = ev.target.closest("[data-a]");
+  if (!btn) return;
+  const d = btn.dataset, o = X[d.id], t = currentTailor();
+  let redraw = true;
+  if (d.a == "pick") ev.preventDefault();                   // stop <summary> from toggling
+  switch (d.a) {
+    case "tab": tab = d.t; break;
+    case "addSection": S.sections.push(newSection("New section", d.t)); break;
+    case "addHeader": S.sections.unshift(newHeader()); break;
+    case "addEntry": o.items.push(newEntry(o.type)); break;
+    case "addBullet": o.bullets.push(newBullet()); break;
+    case "addSkill": o.skills.push(newBullet()); break;
+    case "addAlt": o.vers.push({ id:uid(), text:o.vers[0].text, alt:true }); break;
+    case "unbadge": delete o[d.k]; break;
+    case "dates": o.dates = btn.checked; break;
+    case "mv": masterLists().forEach(list => { if (list.some(x => x.id == d.id)) moveIn(list, d.id, +d.d); }); break;
+    case "del": removeFromMaster(d.id); break;
+    case "del2": btn.dataset.a = "del"; btn.textContent = "Sure?"; redraw = false; break;
+    case "untag": o.tags = o.tags.filter(x => x != d.t); break;
+    case "newT": { const x = { id:uid(), name:$("#tn").value.trim() || "Untitled", items:[] }; S.tailors.push(x); S.cur = x.id; break; }
+    case "dupT": if (t) { S.tailors.push({ ...JSON.parse(JSON.stringify(t)), id:uid(), name:t.name + " copy" }); S.cur = S.tailors[S.tailors.length - 1].id; } break;
+    case "delT": S.tailors = S.tailors.filter(x => x.id != S.cur); S.cur = null; break;
+    case "pick": pick(d.p); break;
+    case "tmv": if (t) moveIn(t.items, d.id, +d.d); break;
+    case "tdel": if (t) t.items = t.items.filter(x => x.id != d.id); break;
+    case "mode": ai.mode = d.m; break;
+    case "gen": ai.out = buildPrompt(); break;
+    case "copy": case "copyBackup": {
+      const text = d.a == "copy" ? ai.out : backupText();
+      try { await navigator.clipboard.writeText(text); btn.textContent = "Copied"; }
+      catch (err) { btn.textContent = "Copy blocked: select the text manually"; }
+      redraw = false; break;
+    }
+    case "imp": importReply(); break;
+    case "export": exportResume(d.id); redraw = false; break;
+    case "saveBackup": saveFile("resume-backup.json", backupText(), "application/json"); redraw = false; break;
+    case "importBackup":
+      try {
+        const parsed = JSON.parse(ai.bin), data = parsed.data || parsed;
+        if (!Array.isArray(data.sections)) throw new Error("not a backup");
+        S = upgrade({ cur:null, tailors:[], ...data }); S.id = "resume"; ai.bmsg = "Imported."; ai.bin = "";
+      } catch (err) { ai.bmsg = "That does not look like a backup file."; }
+      break;
+  }
+  if (redraw) render(); else updatePreview();
+});
+
+render();
+(async () => { try { saver = await claude.use("downloads"); } catch (err) { saver = null; } })();
+</script>
+</body>
+</html>
